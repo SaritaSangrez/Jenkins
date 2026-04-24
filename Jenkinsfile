@@ -1,64 +1,59 @@
 pipeline {
     agent any
 
-    // 1. Tools Section: Matches the name in Manage Jenkins -> Tools
+    // 1. Parameters Section: Defines the user input fields
+    parameters {
+        string(name: 'DEPLOY_ENV', defaultValue: 'Staging', description: 'Enter the Target Environment')
+        choice(name: 'LOG_LEVEL', choices: ['INFO', 'DEBUG', 'ERROR'], description: 'Select the logging level')
+        booleanParam(name: 'EXECUTE_TESTS', defaultValue: true, description: 'Check to run the Test stage')
+    }
+
     tools {
         maven 'Maven3' 
     }
 
-    // 2. Environment Variables: Accessible across all stages
     environment {
         APP_VERSION = '2.4.0'
-        SCAN_LEVEL = 'High'
     }
 
     stages {
         stage('Initialize') {
             steps {
-                echo "Initializing Pipeline for Version: ${env.APP_VERSION}"
-                // Verify Maven is correctly linked in Jenkins
+                echo "Starting build for Version: ${env.APP_VERSION}"
+                echo "Target Environment: ${params.DEPLOY_ENV}"
+                echo "Log Level set to: ${params.LOG_LEVEL}"
                 bat 'mvn -version'
             }
         }
 
         stage('Build') {
             steps {
-                echo "Building version ${env.APP_VERSION}..."
-                echo 'Maven build step initiated.'
-                // In a real project, you would use: bat 'mvn clean install'
+                echo 'Maven build step initiated...'
             }
         }
 
         stage('Test') {
-            // 3. Conditionals: Only runs if the branch is 'main' (or 'master')
-            // Change 'main' to 'master' if that is your branch name
+            // 2. Conditional Logic: Only runs if the boolean parameter is checked
             when {
-                branch 'main'
+                expression { return params.EXECUTE_TESTS == true }
             }
             steps {
-                echo "Running security tests at level: ${env.SCAN_LEVEL}"
+                echo "Executing tests as requested by user..."
                 echo 'Testing..'
             }
         }
 
         stage('Deploy') {
             steps {
-                echo "Deploying version ${env.APP_VERSION} to the server..."
+                echo "Deploying to ${params.DEPLOY_ENV} environment."
                 echo 'Deploying....'
             }
         }
     }
 
-    // 4. Post-Build Actions: Runs after the stages finish
     post {
         always {
-            echo "Execution of version ${env.APP_VERSION} is complete."
-        }
-        success {
-            echo 'Build Status: SUCCESS - All stages passed!'
-        }
-        failure {
-            echo 'Build Status: FAILURE - Please check the logs.'
+            echo "Pipeline finished for version ${env.APP_VERSION}."
         }
     }
 }
