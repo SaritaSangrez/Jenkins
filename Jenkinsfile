@@ -1,40 +1,40 @@
 pipeline {
     agent any
+    
+    // Defining global variables accessible by all stages
+    environment {
+        APP_VERSION = '2.4.0'
+        SCAN_LEVEL = 'High'
+    }
+
     stages {
         stage('Build') {
-            // Logic: Always build, no condition needed here usually
             steps {
-                echo 'Building..'
+                // Using the environment variable with the $ sign
+                echo "Building Application Version: ${env.APP_VERSION}"
+                echo "Security Scan Level: ${env.SCAN_LEVEL}"
             }
         }
 
         stage('Test') {
-            // Logic: Only run tests if we are on the 'main' branch
             when {
-                branch 'main'
+                branch 'main' 
             }
             steps {
-                echo 'Testing..'
+                echo "Running tests for version ${env.APP_VERSION}..."
             }
         }
 
         stage('Deploy') {
-            // Logic: Only deploy if the 'Test' stage passed AND we are on 'main'
-            when {
-                allOf {
-                    branch 'main'
-                    // You could add other conditions here, like an environment variable
-                }
-            }
             steps {
-                echo 'Deploying....'
+                echo "Deploying version ${env.APP_VERSION} to Production."
             }
         }
     }
 
     post {
         always {
-            echo 'Pipeline execution finished.'
+            echo "Pipeline for version ${env.APP_VERSION} has completed."
         }
     }
 }
