@@ -2,42 +2,39 @@ pipeline {
     agent any
     stages {
         stage('Build') {
+            // Logic: Always build, no condition needed here usually
             steps {
                 echo 'Building..'
-                // Add your build commands here
             }
         }
 
         stage('Test') {
-            // This stage only runs if the branch name matches 'main'
-            // Change 'main' to 'master' if that is what your branch is named
+            // Logic: Only run tests if we are on the 'main' branch
             when {
-                branch 'main' 
+                branch 'main'
             }
             steps {
                 echo 'Testing..'
-                // Add your test commands here
             }
         }
 
         stage('Deploy') {
+            // Logic: Only deploy if the 'Test' stage passed AND we are on 'main'
+            when {
+                allOf {
+                    branch 'main'
+                    // You could add other conditions here, like an environment variable
+                }
+            }
             steps {
                 echo 'Deploying....'
-                // Add your deployment commands here
             }
         }
     }
 
-    // Post-build actions section
     post {
         always {
-            echo 'The build process has finished. This message always appears.'
-        }
-        success {
-            echo 'Build successful! This only runs if all stages pass.'
-        }
-        failure {
-            echo 'Build failed. This only runs if a stage fails.'
+            echo 'Pipeline execution finished.'
         }
     }
 }
